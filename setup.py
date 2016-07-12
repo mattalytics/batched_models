@@ -1,6 +1,6 @@
 from distutils.core import setup
 
-setup(name='manager',
+setup(name='BulkManager',
       version='0.1.0',
       description='Django Bulk Manager',
       author='Matt',
