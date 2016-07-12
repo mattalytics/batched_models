@@ -6,5 +6,5 @@ setup(name='manager',
       author='Matt',
       author_email='matt@matt.com',
       url='https://www.python.org',
-      packages=['manager.BulkManager'],
+      packages=['BulkManager'],
      )
