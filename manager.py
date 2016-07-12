@@ -118,14 +118,14 @@ class BulkManager(BulkUpdateManager):
             return self.mgr.model.objects.filter(filters)
             """
 
-        def run(self):
+        def run(self, batch_size=5000):
             if len(self._queries) == 0:
                 raise Exception('Empty batch')
 
             operation = self._queries[0]['operation']
 
             logging.debug('generating queries')
-            found = self.find_from_batch()
+            found = self.find_from_batch(batch_size=batch_size)
             matches = []
             new = []
             match_hash = self.match_hash()
