@@ -6,5 +6,5 @@ setup(name='batched_models',
       author='Matt',
       author_email='matt@matt.com',
       url='https://www.python.org',
-      packages=['batched_models.BulkManager'],
+      packages=['batched_models'],
      )
