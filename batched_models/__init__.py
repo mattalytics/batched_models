@@ -18,10 +18,15 @@ class BulkManager(BulkUpdateManager):
     Relies on the fine work of Aykut Ozat: https://github.com/aykut
 
     """
+    def __init__(self, bulk_update_size=2000):
+        super(BulkManager, self).__init__()
+        self.bulk_update_size = bulk_update_size #size used by bulk_update_mgr
+
     class Bulk():
         def __init__(self, mgr):
             self._queries = [] #do not touch
             self.mgr = mgr
+            self.bulk_update_size = mgr.bulk_update_size
 
         def get_or_create(self, defaults={}, **kwargs):
             self.validate_params(kwargs, 'get')
@@ -153,7 +158,7 @@ class BulkManager(BulkUpdateManager):
 
                 if matches and operation == 'update':
                     logging.debug('bulk update')
-                    self.mgr.model.objects.bulk_update(matches, batch_size=500, update_fields=self.fields_to_update())
+                    self.mgr.model.objects.bulk_update(matches, batch_size=self.bulk_update_size, update_fields=self.fields_to_update())
                 else:
                     logging.debug('not performing update')
 
@@ -162,6 +167,12 @@ class BulkManager(BulkUpdateManager):
             else:
                 #if you want to return results from an update, just call *find_from_batch()* manually
                 return []
+
+        def to_unicode(self, val):
+            if type(val) == str:
+                return unicode(val, 'utf-8').encode('utf-8')
+
+            return unicode(val).decode('utf-8').encode('utf-8')
 
         def match_hash(self):
             """
@@ -174,7 +185,8 @@ class BulkManager(BulkUpdateManager):
                 q = query['search']
                 key = ''
                 for k in sorted(q.keys()):
-                    escaped_val = hashlib.sha1(unicode(q[k])).hexdigest()
+                    sval = self.to_unicode(q[k])
+                    escaped_val = hashlib.sha1(sval).hexdigest()
                     key += k + ':' + escaped_val + '&'
 
                 matches[key[:-1]] = query
@@ -190,7 +202,8 @@ class BulkManager(BulkUpdateManager):
             ormkey = ''
 
             for k in sorted(self.get_fields()):
-                escaped_val = hashlib.sha1(unicode(getattr(record, k))).hexdigest()
+                sval = self.to_unicode(getattr(record, k))
+                escaped_val = hashlib.sha1(sval).hexdigest()
                 ormkey += k + ':' + escaped_val + '&'
 
             ormkey = ormkey[:-1]

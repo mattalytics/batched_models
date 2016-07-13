@@ -1,22 +1,29 @@
+# -*- coding: UTF-8 -*-
 from django.test import TestCase
 from batched.models import *
 from django.core.management.base import BaseCommand
 import time
+
+
 bigtext1 = """
 hi
 this is a story
-asdfkj34k5j3k4mkf::& &x:&
+asdfkj34k5j3k4mkf::& &x:&j∆∆˚ß∆µß˚øˆ¨ˆ∆
 """
 
 bigtext2 = bigtext1 + bigtext1
+reallybigtext = ''
+for i in range(0,1000):
+    reallybigtext += bigtext1
+
 
 bs=5000 #lower this value if you crash...
+test_size = 5000
 
 class TestArch(TestCase):
 
     def test_basic_bulk(self):
         """simple single-field update should work - CAPTURE BENCHMARKS TOO"""
-        test_size = 100000
 
         bulk_create_time = time.time()
         b = bulker.objects.bulk_operation()
@@ -65,12 +72,36 @@ class TestArch(TestCase):
         if len(results) != 1111:
             raise Exception('get return proper value')
         assert(results[0].pk)
+        """check that the values are actually correct"""
+        found = bulker.objects.filter(x__in=[unicode(i) for i in range(test_size+333333, test_size+334444)])
+        assert(found.count() == 1111)
+        for f in found:
+            if f.y != f.x:
+                assert(False)
 
         #can it handle complex text?
         b = bulker.objects.bulk_operation()
         b.update_or_create(x=bigtext2,y=bigtext1)
-        b.update_or_create(y=bigtext2,x=bigtext1)
+        b.update_or_create(y=bigtext1,x=bigtext2)
+        b.update_or_create(x=reallybigtext+reallybigtext, y=reallybigtext)
         b.run()
+
+        found = bulker.objects.filter(x__exact=reallybigtext+reallybigtext)
+        assert(found.count()==1)
+
+        #deals with numbers, right?
+        b = bulker.objects.bulk_operation()
+        for i in range(100000,101000):
+            b.update_or_create(x='test1' + str(i),
+                               y='test2'+str(i),
+                               num=i
+                               )
+        b.run()
+        found = bulker.objects.filter(num__gte=100000)
+        assert(found.count() == 1000)
+        for f in found:
+            assert(f.x=='test1'+str(f.num))
+            assert(f.y=='test2'+str(f.num))
 
         #does it error when doing something stupid?
         try:

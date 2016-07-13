@@ -7,5 +7,6 @@ class bulker(models.Model):
     id=models.AutoField(primary_key=True)
     x=models.TextField(unique=True)
     y=models.TextField()
+    num = models.IntegerField(null=True)
 
-    objects = BulkManager()
+    objects = BulkManager(500)
