@@ -4,6 +4,7 @@ import logging
 from django.db import transaction
 import math
 from bulk_update.manager import BulkUpdateManager
+import hashlib
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
@@ -173,12 +174,10 @@ class BulkManager(BulkUpdateManager):
                 q = query['search']
                 key = ''
                 for k in sorted(q.keys()):
-                    escaped_val = unicode(q[k])
-                    escaped_val = escaped_val.replace(':', '\:')
-                    escaped_val = escaped_val.replace('&', '\&')
-                    key += k + '::' + escaped_val + '&&'
+                    escaped_val = hashlib.sha1(unicode(q[k])).hexdigest()
+                    key += k + ':' + escaped_val + '&'
 
-                matches[key[:-2]] = query
+                matches[key[:-1]] = query
 
             return matches
 
@@ -191,12 +190,10 @@ class BulkManager(BulkUpdateManager):
             ormkey = ''
 
             for k in sorted(self.get_fields()):
-                escaped_val = unicode(getattr(record, k))
-                escaped_val = escaped_val.replace(':', '\:')
-                escaped_val = escaped_val.replace('&', '\&')
-                ormkey += k + '::' + escaped_val + '&&'
+                escaped_val = hashlib.sha1(unicode(getattr(record, k))).hexdigest()
+                ormkey += k + ':' + escaped_val + '&'
 
-            ormkey = ormkey[:-2]
+            ormkey = ormkey[:-1]
             return ormkey
 
         def get_fields(self):
