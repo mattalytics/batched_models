@@ -153,7 +153,7 @@ class BulkManager(BulkUpdateManager):
 
                 if matches and operation == 'update':
                     logging.debug('bulk update')
-                    self.mgr.model.objects.bulk_update(matches, batch_size=2000, update_fields=self.fields_to_update())
+                    self.mgr.model.objects.bulk_update(matches, batch_size=500, update_fields=self.fields_to_update())
                 else:
                     logging.debug('not performing update')
 
